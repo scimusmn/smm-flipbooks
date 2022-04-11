@@ -1,9 +1,274 @@
+/* stylelint-disable selector-class-pattern */
+
+/* This CSS file represents an example assuming two languages (en and ar) are available. */
+
+/* Edit to match the design and locales of your project. */
+
 html,
 body {
+  background-color: #666;
+  color: #fff;
+  font-family: "Open Sans", sans-serif;
+  height: 1080px;
+  margin: 0;
+  padding: 0;
+  width: 1920px;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+p {
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 32px;
+}
+
+.ar.text-container {
+  position: absolute;
+  right: 214px;
+  top: 140px;
+  width: 620px;
+}
+
+.ar h2 {
+  font-size: 30px;
+  font-weight: 700;
+  margin-right: 32px;
+  width: 90%;
+}
+
+.ar .body p {
+  font-size: 25px;
+  font-weight: 300;
+  line-height: 30px;
+  margin-right: 32px;
+  width: 90%;
+}
+
+.en-US.text-container {
+  left: 1085px;
+  position: absolute;
+  top: 605px;
+  width: 650px;
+}
+
+.en-US h2 {
+  font-weight: 500;
+  letter-spacing: 8.75px;
+  line-height: 32px !important;
+  margin-left: 32px;
+  text-transform: uppercase;
+  width: 90%;
+}
+
+.en-US .body p {
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 32px;
+  margin-left: 32px;
+  width: 90%;
+}
+
+.separator {
+  background-image: linear-gradient(90deg, #fff -0.87%, #afafaf 1.21%, #0d003a 82.66%, #9f9f9f 99.37%);
+  height: 3px;
+  margin-bottom: 38px;
+  margin-top: 32px;
+  opacity: 0.65;
+  width: 571px;
+}
+
+.ar .separator {
+  right: 218px;
+  transform: rotate(-180deg);
+}
+
+.en-US .separator {
+  transform: rotate(0deg);
+}
+
+.media {
+  left: 0;
+  position: absolute;
+  top: 0;
+}
+
+.credit {
+  color: rgb(255 255 255 / 90%);
+  font-size: 12px;
+  height: 0;
+  left: 15px;
+  position: absolute;
+  text-shadow: 0 0 4px rgb(0 0 0 / 60%);
+  top: 1060px;
+  width: 1000px;
+}
+
+/* Swiper customization */
+
+.swiper-container {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  width: 100vw;
+}
+
+.swiper-slide {
+  background: linear-gradient(180deg, #3c3b3c 0%, #252525 100%);
   height: 100%;
+  overflow: hidden;
+  position: relative;
   width: 100%;
 }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  content: "" !important;
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  background-image: url("./images/nav-arrow.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  height: 60px !important;
+  left: 92.6% !important;
+  width: 60px !important;
+}
+
+.swiper-button-prev {
+  top: 39.75% !important;
+  transform: rotate(180deg);
+}
+
+.swiper-button-next {
+  top: 59% !important;
+}
+
+.swiper-button-next:active,
+.swiper-button-prev:active {
+  background-image: url("./images/nav-arrow-active.svg");
+}
+
+.swiper-pagination-bullets {
+  right: 1.4% !important;
+}
+
+.swiper-pagination-bullet {
+  height: 10px !important;
+  margin: 10px 0 !important;
+  width: 10px !important;
+}
+
+.swiper-pagination .swiper-pagination-bullet {
+  background-color: #fff !important;
+  opacity: 0.3 !important;
+}
+
+.swiper-pagination .swiper-pagination-bullet-active {
+  opacity: 1 !important;
+}
+
+/* Examples of targeting and styling title slides */
+
+/* Title slide */
+
+.title-slide {
+  background: radial-gradient(95% 85% at 100% 0%, #777 0%, #555 70%);
+}
+
+.title-slide .ar {
+  font-size: 50px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  line-height: 32px;
+  position: absolute;
+  text-align: center;
+  text-transform: uppercase;
+  top: 37%;
+  width: 100%;
+}
+
+.title-slide .en-US {
+  font-size: 35px;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 12.25px;
+  line-height: 61px;
+  position: absolute;
+  text-align: center;
+  text-transform: uppercase;
+  top: 50%;
+  width: 100%;
+}
+
+.title-slide .separator {
+  background: linear-gradient(90deg, rgb(13 0 58 / 0%) -0.88%, #555 40%, #777 49%, #666 57%, rgb(111 111 111 / 0%) 99%);
+  height: 3px;
+  left: 538px;
+  opacity: 0.65;
+  position: absolute;
+  top: 44.4%;
+  width: 845px;
+}
+
+/* Examples of targeting specific locales */
+
+.es {
+  color: aqua !important;
+}
+
+.ja {
+  color: greenyellow !important;
+}
+
+.fr {
+  color: yellow !important;
+}
+
+/* Language toggles */
+
+.locale-buttons {
+  bottom: 2%;
+  position: fixed;
+  right: 0%;
+  z-index: 9;
+}
+
+.locale-button {
+  background-color: #9a9393;
+  border-radius: 5px;
+  color: white;
+  font-size: 21px !important;
+  margin: 15px;
+  margin-left: 0;
+  padding: 5px;
+  padding-left: 25px;
+  padding-right: 25px;
+  text-decoration: none;
+}
+
+.locale-button.ar::after {
+  content: " 🇰🇼";
+}
+
+.locale-button.en-US::after {
+  content: " 🇺🇸";
+}
+
+.locale-button.es::after {
+  content: " 🇲🇽";
+}
+
+.locale-button.ja::after {
+  content: " 🇯🇵";
+}
+
+.locale-button.fr::after {
+  content: " 🇫🇷";
 }

@@ -53,7 +53,7 @@
   "scripts": {
     "build": "gatsby clean && gatsby build",
     "clean": "gatsby clean",
-    "create-model": "node migrations/flipbooks-model.js",
+    "create-model": "node scripts/run-migration.js ./migrations/create-smm-flipbooks.js",
     "depcheck": "node -r esm scripts/depcheck.js",
     "develop": "gatsby develop --port 3000",
     "install:arduino-base": "node scripts/install-arduino-base.js",

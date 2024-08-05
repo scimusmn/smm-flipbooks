@@ -104,7 +104,6 @@ function Flipbook({ data, pageContext, location }) {
 
   // get default locale info
   const defaultLocale = localesInfo.filter((locale) => locale.default === true);
-  console.log('default?', `${window.origin}/${defaultLocale[0].code}/${pageContext.slug}?currentSlide=0`);
 
   // Filter out current locale
   const buttonLocales = localesInfo.filter((locale) => !pageContext.locales.includes(locale.code));

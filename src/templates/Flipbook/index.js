@@ -1,5 +1,5 @@
 /* eslint no-console: 0 */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { graphql, Link } from 'gatsby';
 import PropTypes from 'prop-types';
 import { GatsbyImage, getImage } from 'gatsby-plugin-image';
@@ -100,11 +100,23 @@ function Flipbook({ data, pageContext, location }) {
 
   // Array of multi-locale slides
   const slides = localeNodes[0].slides.map((slide, i) => localeNodes.map((node) => node.slides[i]));
-
   const localesInfo = data.allContentfulLocale.edges.map((edge) => edge.node);
+
+  // get default locale info
+  const defaultLocale = localesInfo.filter((locale) => locale.default === true);
+
   // Filter out current locale
   const buttonLocales = localesInfo.filter((locale) => !pageContext.locales.includes(locale.code));
   const intlNames = new Intl.DisplayNames('en', { type: 'language', languageDisplay: 'dialect' });
+
+  // To sync slide index between locales
+  const [currentSlide, setCurrentSlide] = useState(null);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    let slideIndex = params.get('currentSlide');
+    if (!slideIndex) slideIndex = 0;
+    setCurrentSlide(parseInt(slideIndex, 10));
+  }, []);
 
   // Inactivity timeout
   const { inactivityTimeout } = localeNodes[0];
@@ -112,7 +124,7 @@ function Flipbook({ data, pageContext, location }) {
     timeout: inactivityTimeout * 1000,
     debounce: 500,
     startOnMount: false,
-    onIdle: () => window.location.reload(false),
+    onIdle: () => window.location.replace(`${window.origin}/${defaultLocale[0].code}/${pageContext.slug}?currentSlide=0`),
   });
 
   const getAltText = (altObj) => {
@@ -120,12 +132,27 @@ function Flipbook({ data, pageContext, location }) {
     return 'Image';
   };
 
+  const setUrlParam = (key, value) => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set(key, value);
+      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+      window.history.replaceState(null, null, newUrl);
+    }
+  };
+
+  const onSlideChange = (swiper) => {
+    const { realIndex } = swiper;
+    setUrlParam('currentSlide', realIndex);
+    setCurrentSlide(realIndex);
+  };
+
   const renderLocaleButtons = () => (
     <div className="locale-buttons">
       { buttonLocales && buttonLocales.map((localeInfo) => (
         <Link
           key={localeInfo.code}
-          to={`/${localeInfo.code}/${pageContext.slug}`}
+          to={`/${localeInfo.code}/${pageContext.slug}?currentSlide=${currentSlide}`}
           className={`locale-button ${localeInfo.code}`}
         >
           {intlNames.of(localeInfo.code)}
@@ -186,7 +213,10 @@ function Flipbook({ data, pageContext, location }) {
 
   return (
     <>
+      {currentSlide !== null
+      && (
       <Swiper
+        initialSlide={currentSlide}
         spaceBetween={0}
         slidesPerView={1}
         centeredSlides
@@ -195,10 +225,12 @@ function Flipbook({ data, pageContext, location }) {
         pagination={{
           clickable: true,
         }}
+        onSlideChange={onSlideChange}
         className={localeNodes[0].slug}
       >
         {renderSlides}
       </Swiper>
+      )}
       {renderLocaleButtons()}
     </>
   );

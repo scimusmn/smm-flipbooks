@@ -27,21 +27,22 @@ p {
   line-height: 32px;
 }
 
-.ar.text-container {
+.es.text-container {
+  left: 414px;
   position: absolute;
-  right: 214px;
   top: 140px;
   width: 620px;
+  z-index: 1;
 }
 
-.ar h2 {
+.es h2 {
   font-size: 30px;
   font-weight: 700;
   margin-right: 32px;
   width: 90%;
 }
 
-.ar .body p {
+.es .body p {
   font-size: 25px;
   font-weight: 300;
   line-height: 30px;
@@ -54,6 +55,7 @@ p {
   position: absolute;
   top: 605px;
   width: 650px;
+  z-index: 1;
 }
 
 .en-US h2 {
@@ -82,7 +84,7 @@ p {
   width: 571px;
 }
 
-.ar .separator {
+.es .separator {
   right: 218px;
   transform: rotate(-180deg);
 }
@@ -92,9 +94,18 @@ p {
 }
 
 .media {
+  height: 100%;
   left: 0;
   position: absolute;
   top: 0;
+  width: 100%;
+  z-index: 0;
+}
+
+.media img,
+.media video {
+  height: 100%;
+  width: 100%;
 }
 
 .credit {

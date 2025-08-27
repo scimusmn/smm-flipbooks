@@ -1,31 +1,35 @@
+/* eslint-disable */
+const fs = require('fs');
+const path = require('path');
+
 exports.createSchemaCustomization = async ({ actions }) => {
   const { createTypes } = actions;
 
-  // Contentful-like schema that matches your queries & fragments
   createTypes(`
-    type ContentfulLocale implements Node @dontInfer {
+    type ContentfulLocale implements Node {
       code: String!
       name: String!
       default: Boolean!
     }
 
-    type ContentfulFlipbook implements Node @dontInfer {
+    type ContentfulFlipbook implements Node {
       slug: String!
       inactivityTimeout: Int!
       node_locale: String!
-      slides: [ContentfulSlideContentfulTitleSlideUnion!]!
+      # IMPORTANT: link, because slides are real nodes
+      slides: [ContentfulSlideContentfulTitleSlideUnion] @link(from: "slides___NODE")
     }
 
     union ContentfulSlideContentfulTitleSlideUnion = ContentfulTitleSlide | ContentfulSlide
 
-    type ContentfulTitleSlide @dontInfer {
+    # Both slide types are Nodes (not embedded objects)
+    type ContentfulTitleSlide implements Node {
       id: ID!
       node_locale: String!
       title: String
     }
 
-    # Matches the fields your fragment/query reads
-    type ContentfulSlide @dontInfer {
+    type ContentfulSlide implements Node {
       id: ID!
       node_locale: String!
       title: String
@@ -33,132 +37,180 @@ exports.createSchemaCustomization = async ({ actions }) => {
       media: ContentfulMedia
     }
 
-    type ContentfulRichText @dontInfer {
+    type ContentfulRichText {
       raw: String!
     }
 
-    type ContentfulMedia @dontInfer {
+    type ContentfulMedia {
       credit: String
       altText: ContentfulAltText
       media: ContentfulAsset
     }
 
-    type ContentfulAltText @dontInfer {
+    type ContentfulAltText {
       altText: String
     }
 
-    type ContentfulAsset @dontInfer {
+    type ContentfulAsset {
       file: ContentfulFileDetails
       url: String
-      # IMPORTANT: store File node id in "localFile___NODE" during sourcing
       localFile: File @link
     }
 
-    type ContentfulFileDetails @dontInfer {
+    type ContentfulFileDetails {
       contentType: String
       url: String
     }
   `);
 };
 
-exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => {
-  // eslint-disable-next-line global-require, import/no-unresolved
-  const jsonData = require('../../static/content.json');
+exports.sourceNodes = async ({
+  actions,
+  createNodeId,
+  createContentDigest,
+  reporter,
+}) => {
+  const { createNode } = actions;
 
-  // Transform Locales from JSON into Contentful structure
-  jsonData.locales.forEach((locale) => {
-    const transformedData = {
-      code: locale.code,
-      name: locale.name,
-      default: locale.default,
-    };
-
-    const node = {
-      ...transformedData,
-      // Required fields
-      id: createNodeId(transformedData.code),
-      internal: {
-        type: 'ContentfulLocale',
-        contentDigest: createContentDigest(transformedData),
-      },
-    };
-
-    actions.createNode(node);
-  });
-
-  // Get default locale code
-  const defaultLocale = jsonData.locales.find((locale) => locale.default).code;
-
-  function getLocalized(fieldValue, localeCode) {
-    // Return the value as-is if it's not a locale object
-    if (typeof fieldValue !== 'object') {
-      return fieldValue;
-    }
-    // If it's an object with locale keys, return the value for requested locale
-    if (fieldValue[localeCode]) {
-      return fieldValue[localeCode];
-    }
-    // If the requested locale doesn't exist, fall back to default locale value
-    if (fieldValue[defaultLocale]) {
-      return fieldValue[defaultLocale];
-    }
-    console.warn(`Unable to localize field value ${localeCode} - ${fieldValue}`);
-    return null;
+  // Load your JSON robustly relative to project root
+  const jsonPath = path.resolve(process.cwd(), 'static', 'content.json');
+  if (!fs.existsSync(jsonPath)) {
+    reporter.panicOnBuild(`[local-contentful] Missing data file at ${jsonPath}`);
+    return;
+  }
+  let jsonData;
+  try {
+    jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+    console.log(jsonData);
+  } catch (e) {
+    reporter.panicOnBuild(`[local-contentful] Failed to parse JSON: ${e.message}`);
+    return;
   }
 
-  // Transform Flipbooks from JSON into Contentful structure
-  jsonData.flipbooks.forEach((flipbook, index) => {
-    // Create one node per locale (to match Contentful's locale structure)
-    // These locale nodes are merged in front-end queries
-    jsonData.locales.forEach((locale) => {
-      const transformedData = {
-        slug: flipbook.slug || `flipbook-${index + 1}`, // If no slug is provided, use a default
-        node_locale: locale.code,
-        inactivityTimeout: flipbook.inactivityTimeout,
-        slides: flipbook.slides.map((slide, slideIndex) => ({
-          __typename:
-            slide.type === 'title'
-              ? 'ContentfulTitleSlide'
-              : 'ContentfulSlide', // "title" -> "ContentfulTitleSlide", else "ContentfulSlide"
-          id: slide.id || `slide-${slideIndex}`, // If no ID is provided, use a default
-          title: getLocalized(slide.title, locale.code),
-          body: {
-            raw: getLocalized(slide.body, locale.code),
-          },
-          media: {
-            credit: slide.media.credit || '',
-            altText: slide.media.altText || '',
-            media: {
-              file: {
-                contentType: slide.media.type === 'video' ? 'video/mp4' : 'image/png',
-              },
-              localFile: {
-                publicURL: slide.media.url,
-                childImageSharp: {
-                  gatsbyImageData: {
-                    width: flipbook.mediaWidth || 950,
-                    height: flipbook.mediaHeight || 1080,
-                    // layout: 'FIXED',
-                    // placeholder: 'BLURRED',
-                  },
-                },
-              },
-            },
-          },
-        })),
-      };
+  const locales = jsonData.locales || [];
+  const flipbooks = jsonData.flipbooks || [];
 
-      const node = {
-        ...transformedData,
-        // Required fields
-        id: createNodeId(`${transformedData.slug}-${locale.code}`),
+  // Create locales
+  locales.forEach((locale) => {
+    const node = {
+      code: locale.code,
+      name: locale.name,
+      default: !!locale.default,
+      id: createNodeId(`locale-${locale.code}`),
+      internal: {
+        type: 'ContentfulLocale',
+        contentDigest: createContentDigest(locale),
+      },
+    };
+    createNode(node);
+  });
+
+  const defaultLocaleCode = (locales.find((l) => l.default) || locales[0] || {}).code;
+
+  const getLocalized = (value, localeCode) => {
+    if (value == null) return null;
+    // If value is primitive or already stringified, return as-is
+    if (typeof value !== 'object') return value;
+    // Locale map object
+    if (Object.prototype.hasOwnProperty.call(value, localeCode)) return value[localeCode];
+    if (defaultLocaleCode && Object.prototype.hasOwnProperty.call(value, defaultLocaleCode)) {
+      return value[defaultLocaleCode];
+    }
+    return null;
+  };
+
+  // For each flipbook, create a node per locale and link slide nodes
+  flipbooks.forEach((fb, fbIndex) => {
+    locales.forEach((locale) => {
+      const nodeLocale = locale.code;
+
+      // Build slide nodes for this locale
+      const slideIds = [];
+      const slides = fb.slides || [];
+
+      slides.forEach((s, i) => {
+        const isTitle = s.type === 'title';
+
+        if (isTitle) {
+          const id = createNodeId(`title-${fb.slug || `flipbook-${fbIndex + 1}`}-${nodeLocale}-${i}`);
+          const titleNode = {
+            id,
+            node_locale: nodeLocale,
+            title: getLocalized(s.title, nodeLocale),
+            internal: {
+              type: 'ContentfulTitleSlide',
+              contentDigest: createContentDigest({
+                fb, s, nodeLocale, i,
+              }),
+            },
+          };
+          createNode(titleNode);
+          slideIds.push(id);
+        } else {
+          const id = createNodeId(`slide-${fb.slug || `flipbook-${fbIndex + 1}`}-${nodeLocale}-${i}`);
+
+          // Media mapping
+          const media = s.media || {};
+
+          console.log('media');
+          console.log(media);
+
+          const slideNode = {
+            id,
+            node_locale: nodeLocale,
+            title: getLocalized(s.title, nodeLocale),
+            body: s.body
+              ? { raw: String(getLocalized(s.body, nodeLocale) || '') }
+              : null,
+            media: Object.keys(media).length
+              ? {
+                credit: media.credit || 'media-default-credit',
+                altText: 'default-alt-text',
+                media: {
+                  file: {
+                    contentType: (media.type === 'video' ? 'video/mp4' : 'image/png'),
+                    url: media.url || 'default-url',
+                  },
+                  url: media.url || null,
+                  localFile: media.url,
+                },
+              }
+              : null,
+            internal: {
+              type: 'ContentfulSlide',
+              contentDigest: createContentDigest({
+                fb, s, nodeLocale, i,
+              }),
+            },
+          };
+
+          createNode(slideNode);
+          slideIds.push(id);
+        }
+      });
+
+      const flipbookNode = {
+        slug: fb.slug || `flipbook-${fbIndex + 1}`,
+        inactivityTimeout: Number.isInteger(fb.inactivityTimeout) ? fb.inactivityTimeout : 120,
+        node_locale: nodeLocale,
+        slides___NODE: slideIds,
+        id: createNodeId(`flipbook-${fb.slug || `flipbook-${fbIndex + 1}`}-${nodeLocale}`),
         internal: {
           type: 'ContentfulFlipbook',
-          contentDigest: createContentDigest(transformedData),
+          contentDigest: createContentDigest({
+            fb, nodeLocale, slideIds,
+          }),
         },
       };
 
-      actions.createNode(node);
+      console.log('Created flipbook node:');
+      console.log(flipbookNode);
+
+      createNode(flipbookNode);
     });
   });
+
+  reporter.info(
+    `[local-contentful] Created ${locales.length} ContentfulLocale nodes, ${flipbooks.length * locales.length} ContentfulFlipbook nodes, and ${flipbooks.reduce((acc, fb) => acc + ((fb.slides && fb.slides.length) || 0), 0) * locales.length} slide nodes.`,
+  );
 };

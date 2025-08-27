@@ -92,10 +92,6 @@ export const pageQuery = graphql`
 `;
 
 function Flipbook({ data, pageContext, location }) {
-  console.log('Page data:', data);
-  console.log('Page context:', pageContext);
-  console.log('Page location:', location);
-
   const localeNodes = data.allContentfulFlipbook.edges.map((edge) => edge.node);
 
   // Array of multi-locale slides
@@ -130,6 +126,26 @@ function Flipbook({ data, pageContext, location }) {
   const getAltText = (altObj) => {
     if (altObj) return altObj.altText;
     return 'Image';
+  };
+
+  const attemptRichText = (text) => {
+    if (!text) return null;
+
+    // If text is not valid JSON, return text.raw
+    // If valid JSON, assume it can be converted through renderRichText
+    let validJSON = false;
+    try {
+      JSON.parse(text.raw);
+      validJSON = true;
+    } catch (error) {
+      validJSON = false;
+    }
+
+    if (validJSON) {
+      return renderRichText(text);
+    }
+
+    return text.raw;
   };
 
   const setUrlParam = (key, value) => {
@@ -184,26 +200,45 @@ function Flipbook({ data, pageContext, location }) {
                 <h2>{(locale.title && locale.title) || null}</h2>
                 <div className="separator" />
                 <div className="body">
-                  {(locale.body && renderRichText(locale.body)) || null}
+                  {(locale.body && attemptRichText(locale.body)) || null}
                 </div>
               </div>
             ))}
             {/* Media */}
             {(slide[0].media && slide[0].media.media) && (
-              <div className="media">
-                {
-                (slide[0].media.media.file.contentType).includes('video')
-                  ? <Video src={slide[0].media.media.localFile.publicURL} active={isActive} />
-                  : (
-                    <GatsbyImage
-                      image={getImage(slide[0].media.media.localFile)}
-                      alt={getAltText(slide[0].media.altText)}
-                      loading="eager"
-                    />
-                  )
-                }
-                <span className="credit">{slide[0].media.credit}</span>
-              </div>
+            <div className="media">
+              {
+          (() => {
+            const isVideo = (slide[0].media.media.file.contentType).includes('video');
+            if (isVideo) {
+              const videoSrc = slide[0].media.media.localFile
+                ? slide[0].media.media.localFile.publicURL
+                : slide[0].media.media.file.url;
+              return (
+                <Video
+                  src={videoSrc}
+                  active={isActive}
+                />
+              );
+            } if (slide[0].media.media.localFile) {
+              return (
+                <GatsbyImage
+                  image={getImage(slide[0].media.media.localFile)}
+                  alt={getAltText(slide[0].media.altText)}
+                  loading="eager"
+                />
+              );
+            }
+            return (
+              <img
+                src={slide[0].media.media.file.url}
+                alt={getAltText(slide[0].media.altText)}
+              />
+            );
+          })()
+}
+              <span className="credit">{slide[0].media.credit}</span>
+            </div>
             )}
           </div>
         )}

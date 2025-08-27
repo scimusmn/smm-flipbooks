@@ -30,7 +30,8 @@
                     },
                     "media": {
                         "type": "image",
-                        "url": "/images/caterpillar.png"
+                        "credit": "Courtesy of [Image Source]",
+                        "url": "./images/caterpillar.png"
                     }
                 },
                 {
@@ -45,6 +46,7 @@
                     },
                     "media": {
                         "type": "video",
+                        "credit": "Courtesy of [Video Source]",
                         "url": "/videos/video-1.mp4"
                     }
                 }
@@ -68,6 +70,7 @@
                     },
                     "media": {
                         "type": "image",
+                        "credit": "Courtesy of [Image Source]",
                         "url": "/images/red.png"
                     }
                 },
@@ -83,6 +86,7 @@
                     },
                     "media": {
                         "type": "video",
+                        "credit": "Courtesy of [Video Source]",
                         "url": "/videos/video-1.mp4"
                     }
                 },
@@ -98,6 +102,7 @@
                     },
                     "media": {
                         "type": "image",
+                        "credit": "-----",
                         "url": "/images/green.png"
                     }
                 }

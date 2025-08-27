@@ -72,20 +72,9 @@ exports.sourceNodes = async ({
 }) => {
   const { createNode } = actions;
 
-  // Load your JSON robustly relative to project root
-  const jsonPath = path.resolve(process.cwd(), 'static', 'content.json');
-  if (!fs.existsSync(jsonPath)) {
-    reporter.panicOnBuild(`[local-contentful] Missing data file at ${jsonPath}`);
-    return;
-  }
-  let jsonData;
-  try {
-    jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-    console.log(jsonData);
-  } catch (e) {
-    reporter.panicOnBuild(`[local-contentful] Failed to parse JSON: ${e.message}`);
-    return;
-  }
+  // Load JSON data from static/content.json
+  const jsonPath = path.join(process.cwd(), 'static', 'content.json');
+  let jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
 
   const locales = jsonData.locales || [];
   const flipbooks = jsonData.flipbooks || [];
@@ -120,69 +109,64 @@ exports.sourceNodes = async ({
   };
 
   // For each flipbook, create a node per locale and link slide nodes
-  flipbooks.forEach((fb, fbIndex) => {
+  flipbooks.forEach((flipbook, flipbookIndex) => {
     locales.forEach((locale) => {
       const nodeLocale = locale.code;
 
       // Build slide nodes for this locale
       const slideIds = [];
-      const slides = fb.slides || [];
+      const slides = flipbook.slides || [];
 
-      slides.forEach((s, i) => {
-        const isTitle = s.type === 'title';
+      slides.forEach((slide, i) => {
+        const isTitle = slide.type === 'title';
 
         if (isTitle) {
-          const id = createNodeId(`title-${fb.slug || `flipbook-${fbIndex + 1}`}-${nodeLocale}-${i}`);
+          const id = createNodeId(`title-${flipbook.slug || `flipbook-${flipbookIndex + 1}`}-${nodeLocale}-${i}`);
           const titleNode = {
             id,
             node_locale: nodeLocale,
-            title: getLocalized(s.title, nodeLocale),
+            title: getLocalized(slide.title, nodeLocale),
             internal: {
               type: 'ContentfulTitleSlide',
               contentDigest: createContentDigest({
-                fb, s, nodeLocale, i,
+                flipbook, slide, nodeLocale, i,
               }),
             },
           };
           createNode(titleNode);
           slideIds.push(id);
         } else {
-          const id = createNodeId(`slide-${fb.slug || `flipbook-${fbIndex + 1}`}-${nodeLocale}-${i}`);
+            const id = createNodeId(`slide-${flipbook.slug || `flipbook-${flipbookIndex + 1}`}-${nodeLocale}-${i}`);
 
-          // Media mapping
-          const media = s.media || {};
+            // Media mapping
+            const media = slide.media || {};
 
-          console.log('media');
-          console.log(media);
-
-          const slideNode = {
-            id,
-            node_locale: nodeLocale,
-            title: getLocalized(s.title, nodeLocale),
-            body: s.body
-              ? { raw: String(getLocalized(s.body, nodeLocale) || '') }
-              : null,
-            media: Object.keys(media).length
-              ? {
+            const slideNode = {
+              id,
+              node_locale: nodeLocale,
+              title: getLocalized(slide.title, nodeLocale),
+              body: slide.body
+                ? { raw: String(getLocalized(slide.body, nodeLocale) || '') }
+                : null,
+              media: {
                 credit: media.credit || 'media-default-credit',
                 altText: 'default-alt-text',
                 media: {
-                  file: {
-                    contentType: (media.type === 'video' ? 'video/mp4' : 'image/png'),
-                    url: media.url || 'default-url',
-                  },
-                  url: media.url || null,
-                  localFile: media.url,
+                file: {
+                  contentType: (media.type === 'video' ? 'video/mp4' : 'image/png'),
+                  url: media.url || 'default-url',
                 },
-              }
-              : null,
-            internal: {
-              type: 'ContentfulSlide',
-              contentDigest: createContentDigest({
-                fb, s, nodeLocale, i,
-              }),
-            },
-          };
+                url: media.url || null,
+                localFile: media.url,
+                },
+              },
+              internal: {
+                type: 'ContentfulSlide',
+                contentDigest: createContentDigest({
+                flipbook, slide, nodeLocale, i,
+                }),
+              },
+            };
 
           createNode(slideNode);
           slideIds.push(id);
@@ -190,27 +174,24 @@ exports.sourceNodes = async ({
       });
 
       const flipbookNode = {
-        slug: fb.slug || `flipbook-${fbIndex + 1}`,
-        inactivityTimeout: Number.isInteger(fb.inactivityTimeout) ? fb.inactivityTimeout : 120,
+        slug: flipbook.slug || `flipbook-${flipbookIndex + 1}`,
+        inactivityTimeout: Number.isInteger(flipbook.inactivityTimeout) ? flipbook.inactivityTimeout : 120,
         node_locale: nodeLocale,
         slides___NODE: slideIds,
-        id: createNodeId(`flipbook-${fb.slug || `flipbook-${fbIndex + 1}`}-${nodeLocale}`),
+        id: createNodeId(`flipbook-${flipbook.slug || `flipbook-${flipbookIndex + 1}`}-${nodeLocale}`),
         internal: {
           type: 'ContentfulFlipbook',
           contentDigest: createContentDigest({
-            fb, nodeLocale, slideIds,
+            flipbook, nodeLocale, slideIds,
           }),
         },
       };
-
-      console.log('Created flipbook node:');
-      console.log(flipbookNode);
 
       createNode(flipbookNode);
     });
   });
 
   reporter.info(
-    `[local-contentful] Created ${locales.length} ContentfulLocale nodes, ${flipbooks.length * locales.length} ContentfulFlipbook nodes, and ${flipbooks.reduce((acc, fb) => acc + ((fb.slides && fb.slides.length) || 0), 0) * locales.length} slide nodes.`,
+    `[source-json-to-contentful] Created ${locales.length} ContentfulLocale nodes, ${flipbooks.length * locales.length} ContentfulFlipbook nodes, and ${flipbooks.reduce((acc, flipbook) => acc + ((flipbook.slides && flipbook.slides.length) || 0), 0) * locales.length} slide nodes.`,
   );
 };

@@ -1,3 +1,66 @@
+exports.createSchemaCustomization = async ({ actions }) => {
+  const { createTypes } = actions;
+
+  // Contentful-like schema that matches your queries & fragments
+  createTypes(`
+    type ContentfulLocale implements Node @dontInfer {
+      code: String!
+      name: String!
+      default: Boolean!
+    }
+
+    type ContentfulFlipbook implements Node @dontInfer {
+      slug: String!
+      inactivityTimeout: Int!
+      node_locale: String!
+      slides: [ContentfulSlideContentfulTitleSlideUnion!]!
+    }
+
+    union ContentfulSlideContentfulTitleSlideUnion = ContentfulTitleSlide | ContentfulSlide
+
+    type ContentfulTitleSlide @dontInfer {
+      id: ID!
+      node_locale: String!
+      title: String
+    }
+
+    # Matches the fields your fragment/query reads
+    type ContentfulSlide @dontInfer {
+      id: ID!
+      node_locale: String!
+      title: String
+      body: ContentfulRichText
+      media: ContentfulMedia
+    }
+
+    type ContentfulRichText @dontInfer {
+      raw: String!
+    }
+
+    type ContentfulMedia @dontInfer {
+      credit: String
+      altText: ContentfulAltText
+      media: ContentfulAsset
+    }
+
+    type ContentfulAltText @dontInfer {
+      altText: String
+    }
+
+    type ContentfulAsset @dontInfer {
+      file: ContentfulFileDetails
+      url: String
+      # IMPORTANT: store File node id in "localFile___NODE" during sourcing
+      localFile: File @link
+    }
+
+    type ContentfulFileDetails @dontInfer {
+      contentType: String
+      url: String
+    }
+  `);
+};
+
 exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => {
   // eslint-disable-next-line global-require, import/no-unresolved
   const jsonData = require('../../static/content.json');
@@ -51,8 +114,8 @@ exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => 
       const transformedData = {
         slug: flipbook.slug || `flipbook-${index + 1}`, // If no slug is provided, use a default
         node_locale: locale.code,
-        inactivityDelay: flipbook.inactivityTimeout,
-        slides: flipbook.selections.map((slide, slideIndex) => ({
+        inactivityTimeout: flipbook.inactivityTimeout,
+        slides: flipbook.slides.map((slide, slideIndex) => ({
           __typename:
             slide.type === 'title'
               ? 'ContentfulTitleSlide'
@@ -75,8 +138,8 @@ exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => 
                   gatsbyImageData: {
                     width: flipbook.mediaWidth || 950,
                     height: flipbook.mediaHeight || 1080,
-                    layout: 'FIXED',
-                    placeholder: 'BLURRED',
+                    // layout: 'FIXED',
+                    // placeholder: 'BLURRED',
                   },
                 },
               },
@@ -90,7 +153,7 @@ exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => 
         // Required fields
         id: createNodeId(`${transformedData.slug}-${locale.code}`),
         internal: {
-          type: 'ContentfulVideoSelector',
+          type: 'ContentfulFlipbook',
           contentDigest: createContentDigest(transformedData),
         },
       };

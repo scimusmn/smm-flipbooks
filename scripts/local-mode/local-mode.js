@@ -49,8 +49,9 @@ rl.question(
       console.log(chalk.green('Deleting ENV example files...'));
       shell.rm('-rf', './env*');
 
-      console.log(chalk.green('Removing Contentful dependencies from package.json...'));
-      shell.exec('yarn remove gatsby-source-contentful');
+      // NOTE: We keep this because we still need "gatsby-source-contentful/rich-text"
+      // console.log(chalk.green('Removing Contentful dependencies from package.json...'));
+      // shell.exec('yarn remove gatsby-source-contentful');
 
       shell.exec('yarn clean');
 

@@ -1,0 +1,112 @@
+{
+    "locales": [
+        {
+            "code": "en-US",
+            "name": "English",
+            "default": true
+        },
+        {
+            "code": "es",
+            "name": "Spanish",
+            "default": false
+        }
+    ],
+    "flipbooks": [
+        {
+            "slug": "bugs",
+            "inactivityTimeout": 45,
+            "mediaHeight": 1080,
+            "mediaWidth": 1920,
+            "slides": [
+                {
+                    "type" : "title",
+                    "title": {
+                        "en-US": "Caterpillar",
+                        "es": "Oruga"
+                    },
+                    "body": {
+                        "en-US": "[EN] Lorem ipsum dolor sit amet.",
+                        "es": "[ES] Ipsum dolor sit amet. Lorem ipsum dolor."
+                    },
+                    "media": {
+                        "type": "image",
+                        "credit": "Courtesy of [Image Source]",
+                        "url": "./images/caterpillar.png"
+                    }
+                },
+                {
+                    "type" : "slide",
+                    "title": {
+                        "en-US": "Ladybug",
+                        "es": "Mariquita"
+                    },
+                    "body": {
+                        "en-US": "[EN] Lorem ipsum dolor sit amet.",
+                        "es": "[ES] Ipsum dolor sit amet. Lorem ipsum dolor."
+                    },
+                    "media": {
+                        "type": "video",
+                        "credit": "Courtesy of [Video Source]",
+                        "url": "/videos/video-1.mp4"
+                    }
+                }
+            ]
+        },
+        {
+            "slug": "bonsais",
+            "inactivityTimeout": 60,
+            "mediaHeight": 750,
+            "mediaWidth": 400,
+            "slides": [
+                {
+                    "type" : "slide",
+                    "title": {
+                        "en-US": "Red tree",
+                        "es": "Árbol rojo"
+                    },
+                    "body": {
+                        "en-US": "[EN] Lorem ipsum dolor sit amet.",
+                        "es": "[ES] Ipsum dolor sit amet. Lorem ipsum dolor."
+                    },
+                    "media": {
+                        "type": "image",
+                        "credit": "Courtesy of [Image Source]",
+                        "url": "/images/red.png"
+                    }
+                },
+                {
+                    "type" : "slide",
+                    "title": {
+                        "en-US": "Green tree A",
+                        "es": "Árbol verde A"
+                    },
+                    "body": {
+                        "en-US": "[EN] Lorem ipsum dolor sit amet.",
+                        "es": "[ES] Ipsum dolor sit amet. Lorem ipsum dolor."
+                    },
+                    "media": {
+                        "type": "video",
+                        "credit": "Courtesy of [Video Source]",
+                        "url": "/videos/video-1.mp4"
+                    }
+                },
+                {
+                    "type" : "slide",
+                    "title": {
+                        "en-US": "Green tree B",
+                        "es": "Árbol verde B"
+                    },
+                    "body": {
+                        "en-US": "[EN] Lorem ipsum dolor sit amet.",
+                        "es": "[ES] Ipsum dolor sit amet. Lorem ipsum dolor."
+                    },
+                    "media": {
+                        "type": "image",
+                        "credit": "-----",
+                        "url": "/images/green.png"
+                    }
+                }
+            ]
+        }
+    ]
+}

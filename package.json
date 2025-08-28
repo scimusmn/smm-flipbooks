@@ -20,6 +20,7 @@
     "react-dom": "^17.0.2",
     "react-helmet": "^6.1.0",
     "react-idle-timer": "^4.6.4",
+    "shelljs": "^0.10.0",
     "swiper": "6.8.4"
   },
   "devDependencies": {
@@ -61,6 +62,7 @@
     "lint": "npm-run-all lint:*",
     "lint:code": "node_modules/.bin/eslint .",
     "lint:style": "node_modules/.bin/stylelint \"**/*.*css\"",
+    "local-mode": "node scripts/local-mode/local-mode.js",
     "serve": "gatsby serve --port 3000"
   }
 }

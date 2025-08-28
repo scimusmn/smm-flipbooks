@@ -1,0 +1,9 @@
+{
+  "name": "source-json-to-contentful",
+  "version": "1.0.0",
+  "description": "Custom Gatsby source plugin for JSON data",
+  "main": "gatsby-node.js",
+  "dependencies": {
+    "gatsby-source-filesystem": "^2.0.0" 
+  }
+}
